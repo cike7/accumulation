@@ -1,4 +1,4 @@
-package com.tp.test;
+package com.tp.test.fragment;
 
 import android.util.Log;
 import android.view.View;

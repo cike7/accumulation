@@ -1,7 +1,9 @@
-package com.tp.test;
+package com.tp.test.fragment;
 
 import android.util.Log;
 import android.widget.TextView;
+
+import com.tp.test.R;
 
 /**
  * Copyright (C), 2003-2021, 深圳市图派科技有限公司
@@ -9,7 +11,7 @@ import android.widget.TextView;
  * Description: 功能3
  * Author: zl
  */
-public class ComponentThree extends FragmentDecorator{
+public class ComponentThree extends FragmentDecorator {
 
     private TextView textView;
 

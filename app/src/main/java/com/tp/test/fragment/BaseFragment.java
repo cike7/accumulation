@@ -1,4 +1,4 @@
-package com.tp.test;
+package com.tp.test.fragment;
 
 import android.os.Bundle;
 import android.util.Log;

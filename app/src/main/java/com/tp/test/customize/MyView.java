@@ -1,4 +1,4 @@
-package com.tp.test;
+package com.tp.test.customize;
 
 import android.content.Context;
 import android.graphics.Canvas;
