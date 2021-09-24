@@ -4,6 +4,7 @@ import android.util.Log;
 import android.widget.TextView;
 
 import com.tp.test.R;
+import com.tp.test.annotation.GetFragment;
 
 /**
  * Copyright (C), 2003-2021, 深圳市图派科技有限公司
@@ -11,6 +12,7 @@ import com.tp.test.R;
  * Description: 功能2
  * Author: zl
  */
+@GetFragment(2)
 public class ComponentTwo extends FragmentDecorator {
 
     private TextView textView;

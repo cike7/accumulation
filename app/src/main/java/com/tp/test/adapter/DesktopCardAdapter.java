@@ -1,11 +1,10 @@
 package com.tp.test.adapter;
 
 import android.content.Context;
-import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.BaseAdapter;
-import com.tp.test.R;
+
 import com.tp.test.customize.DesktopCardView;
 import com.tp.test.model.DesktopCardModel;
 
