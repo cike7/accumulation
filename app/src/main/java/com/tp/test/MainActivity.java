@@ -1,22 +1,38 @@
 package com.tp.test;
 
+import android.annotation.SuppressLint;
+import android.app.Notification;
+import android.app.NotificationManager;
+import android.app.PendingIntent;
+import android.content.ComponentName;
 import android.content.Context;
+import android.content.Intent;
+import android.content.ServiceConnection;
+import android.graphics.BitmapFactory;
 import android.hardware.usb.UsbDevice;
 import android.hardware.usb.UsbManager;
 import android.os.Bundle;
+import android.os.Handler;
+import android.os.IBinder;
+import android.os.Message;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
 import android.widget.GridView;
 
+import androidx.annotation.NonNull;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
 import androidx.core.widget.NestedScrollView;
 import androidx.drawerlayout.widget.DrawerLayout;
 
+import com.tp.netty_client.NettyClient;
+import com.tp.netty_client.ReceiveData;
 import com.tp.test.adapter.DesktopCardAdapter;
 import com.tp.test.annotation.AutoFragment;
 import com.tp.test.annotation.AutoProperties;
 import com.tp.test.annotation.BindString;
+import com.tp.test.control.ClientService;
 import com.tp.test.customize.DesktopCardView;
 import com.tp.test.fragment.BaseFragment;
 import com.tp.test.fragment.ComponentFour;
@@ -113,65 +129,61 @@ public class MainActivity extends AppCompatActivity {
 
 //        new CommunicationThread().start();
 
+        Intent intent = new Intent(MainActivity.this,ClientService.class);
+//        startService(intent);
+        bindService(intent,conn,Context.BIND_AUTO_CREATE);
+
     }
-
-    ArrayList<FragmentDecorator> fragmentDecorators;
-
 
     @Override
-    protected void onStart() {
-        super.onStart();
-
-        List<UsbDevice> usbDevices = getUsbDevices();
-
-        for (int i = 0; i < usbDevices.size(); i++) {
-            Log.e(TAG, ">" + usbDevices.get(i).getDeviceName());
-            Log.e(TAG, ">" + usbDevices.get(i).getManufacturerName());
-            Log.e(TAG, ">" + usbDevices.get(i).getProductName());
-            Log.e(TAG, ">" + usbDevices.get(i).getSerialNumber());
-            Log.e(TAG, ">" + usbDevices.get(i).getVersion());
-            Log.e(TAG, ">" + usbDevices.get(i).getConfigurationCount());
-            Log.e(TAG, ">" + usbDevices.get(i).getDeviceClass());
-            Log.e(TAG, ">" + usbDevices.get(i).getDeviceProtocol());
-            Log.e(TAG, ">" + usbDevices.get(i).getDeviceProtocol());
-        }
-
-//        FragmentDecorator component = new ComponentFour(new ComponentThree(new ComponentTwo(new ComponentOne(null))));
-
-//        if(fragmentDecorators != null && fragmentDecorators.size() > 0){
-//            for (FragmentDecorator fragmentDecorator : fragmentDecorators) {
-//
-//            }
-//        }
-
-//        BaseFragment fragment = new BaseFragment.Builder(component).create(R.layout.fragment_one);
-//        getSupportFragmentManager().beginTransaction().replace(R.id.fragment_view, fragment).commit();
-
+    protected void onDestroy() {
+        super.onDestroy();
+        unbindService(conn);
     }
 
-
-    private UsbManager usbManager;
-
-    /**
-     * 查找本机所有的USB设备
-     */
-    public List<UsbDevice> getUsbDevices() {
-        //1)创建usbManager
-        if (usbManager == null)
-            usbManager = (UsbManager) getSystemService(Context.USB_SERVICE);
-
-        //2)获取到所有设备 选择出满足的设备
-        HashMap<String, UsbDevice> deviceList = usbManager.getDeviceList();
-        Iterator<UsbDevice> deviceIterator = deviceList.values().iterator();
-        //创建返回数据
-        List<UsbDevice> lists = new ArrayList<>();
-        while (deviceIterator.hasNext()) {
-            UsbDevice device = deviceIterator.next();
-            Log.e(TAG, "vendorID--" + device.getVendorId() + "ProductId--" + device.getProductId());
-            lists.add(device);
+    //服务绑定的连接对象
+    private ServiceConnection conn = new ServiceConnection() {
+        @Override
+        public void onServiceConnected(ComponentName name, IBinder service) {
+            ClientService.ClientReceive receive = (ClientService.ClientReceive)service;
+            ClientService clientService = receive.getServer();
+            clientService.setReceiveData(new ReceiveData() {
+                @Override
+                public void onReceive(Object msg) {
+                    Message message = new Message();
+                    message.obj = msg;
+                    handler.sendMessage(message);
+                }
+            });
         }
-        return lists;
-    }
+
+        @Override
+        public void onServiceDisconnected(ComponentName name) {
+
+        }
+    };
+
+
+    @SuppressLint("HandlerLeak")
+    private Handler handler = new Handler(){
+        @Override
+        public void handleMessage(@NonNull Message msg) {
+            super.handleMessage(msg);
+            //创建一个通知管理器
+            NotificationManager notificationManager= (NotificationManager) getSystemService(Context.NOTIFICATION_SERVICE);
+
+            Notification notification = new Notification.Builder(MainActivity.this)
+                    .setContentTitle("标题")
+                    .setContentText(">>>>" + msg.obj.toString())
+                    .setWhen(System.currentTimeMillis())
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setLargeIcon(BitmapFactory.decodeResource(MainActivity.this.getResources(),R.mipmap.ic_launcher))
+                    .build();
+
+            notificationManager.notify(0,notification);
+
+        }
+    };
 
 
     private class CommunicationThread extends Thread{
@@ -184,7 +196,7 @@ public class MainActivity extends AppCompatActivity {
 
                 Socket socket = new Socket();
 
-                socket.connect(new InetSocketAddress("192.168.1.239",7777),2000);
+                socket.connect(new InetSocketAddress("192.168.1.192",20530),2000);
 
                 new ClientThread(socket).start();
 
